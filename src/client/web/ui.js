@@ -889,6 +889,11 @@ Module.onRuntimeInitialized = () => {
     const getPlayerCount = Module.cwrap('getPlayerCount', 'number', ['number'])
     const getPlayerName = Module.cwrap('getPlayerName', 'string', ['number', 'number'])
     const getPlayerColor = Module.cwrap('getPlayerColor', 'string', ['number', 'number'])
+    const getNodeCount = Module.cwrap('getNodeCount', 'number', ['number'])
+    const getNodeConnected = Module.cwrap('getNodeConnected', 'number', ['number', 'number', 'number'])
+    const getNodeControlledBy = Module.cwrap('getNodeControlledBy', 'number', ['number', 'number'])
+    const getTurnCount = Module.cwrap('getTurnCount', 'number', ['number'])
+    const stepGameHistory = Module.cwrap('stepGameHistory', 'number', ['number', 'number'])
 
     const gameList = loadGames(gameData, gameData.length)
     const gameCount = getGameCount(gameList)
@@ -903,4 +908,12 @@ Module.onRuntimeInitialized = () => {
         color: getPlayerColor(game, index),
     }))
     console.log(players)
+    const nodeCount = getNodeCount(game)
+    const turnCount = getTurnCount(game)
+    for (let i = 0; i < turnCount; i++) {
+        stepGameHistory(game, i)
+        console.log("Turn:", Array.from({length: nodeCount}).map(
+            (_, index) => getNodeControlledBy(game, index)
+        ))
+    }
 }
