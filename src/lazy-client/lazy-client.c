@@ -1,4 +1,5 @@
 #include "lazy-client.h"
+#include "../common/turnresolution.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,4 +47,22 @@ char* getPlayerName(struct GameState *game, unsigned index) {
 
 char* getPlayerColor(struct GameState *game, unsigned index) {
     return game->playerColor[index];
+}
+
+
+unsigned getNodeCount(struct GameState *game) {
+    return game->nodeCount;
+}
+
+unsigned getNodeConnected(struct GameState *game, unsigned a, unsigned b) {
+    return game->adjacencyMatrix[game->nodeCount * a + b];
+}
+
+unsigned getNodeControlledBy(struct GameState *game, unsigned index) {
+    return game->controlledBy[index];
+}
+
+
+unsigned getTurnCount(struct GameState *game) {
+    return game->turnCount;
 }
