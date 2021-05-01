@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct GameList *loadGames(char *data, unsigned size) {
+struct GameList *loadGameList(char *data, unsigned size) {
     struct GameList *gameList = malloc(sizeof(struct GameList));
     gameList->gameCount = 0;
 
@@ -18,6 +18,20 @@ struct GameList *loadGames(char *data, unsigned size) {
         gameList->games[i] = game;
     }
     return gameList;
+}
+
+struct GameState *loadGame(char *data, unsigned size) {
+    struct GameState *game = malloc(sizeof(struct GameState));
+    game->playerCount = 0;
+    game->nodeCount = 0;
+    game->gameName = "";
+    game->id[0] = '\0';
+
+    FILE* f = fmemopen((void*)data, size, "r");
+    if (!f) return game;
+
+    *game = deserialize(f);
+    return game;
 }
 
 unsigned getGameCount(struct GameList *gameList) {
