@@ -66,43 +66,51 @@ body {
 }
 
 #leader-board > .entry {
+    display: block;
+    clear: both;
+}
+
+#leader-board > .entry > .name {
     position: relative;
     display: block;
-    width: 150px;
     color: #fff;
     padding: 10px;
     margin-bottom: 5px;
+    margin-right: 5px;
     background-color: rgba(0, 0, 0, 0.6);
     transition: background-color 0.2s, color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    float: left;
 }
-#leader-board > .entry:hover {
+#leader-board > .entry:hover > .name {
     color: #000;
     background-color: rgba(255, 255, 255, 0.6);
 } 
-#leader-board > .entry > .dot {
+#leader-board > .entry > .name > .dot {
     display: inline-block;
     width: 16px;
     height: 16px;
     margin-right: 10px;
-    vertical-align: middle;
     border: solid 2px rgba(255, 255, 255, 0.6);
     border-radius: 50%;
     background-color: #f00;
     transition: background-color 0.2s, border-color 0.2s;
 }
-#leader-board > .entry:hover > .dot {
+#leader-board > .entry:hover > .name > .dot {
     border-color: rgba(0, 0, 0, 0.6);
     background-color: #f00;
 }
 #leader-board > .entry > .points {
     display: block;
-    position: absolute;
-    top: 0;
-    left: calc(100% + 5px);
-    height: 100%;
     padding: 10px;
     color: #000;
+    margin-right: 5px;
+    min-width: 40px;
+    text-align: center;
     background-color: rgba(255, 255, 255, 0.6);
+    float: left;
 }
 </style>
     </head>
@@ -126,7 +134,15 @@ function showPlayers(game, state = 0) {
         ).filter(v => v === player).length
     ]).sort(([a, ap], [b, bp]) => bp - ap)
     const content = playerPoints.map(([player, points]) => (
-        `<div class="entry"><span class="dot" style="background-color:${player.color}"></span>${player.name}<span class="points">${points}</span></div>`
+        `
+<div class="entry">
+    <span class="points">${points}</span>
+    <span class="name">
+        <span class="dot" style="background-color:${player.color}"></span>
+        ${player.name}
+    </span>
+</div>
+`
     )).join("\n")
     lb.innerHTML = content
 }
