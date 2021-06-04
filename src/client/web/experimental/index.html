@@ -117,12 +117,12 @@ function playMusic() {
     const music = document.getElementById("bg-music")
     music.play()
 }
-function showPlayers(game) {
+function showPlayers(game, state = 0) {
     const lb = document.getElementById("leader-board")
     const playerPoints = game.players.map(player => [
         player,
         Array.from(
-            game.states[game.states.length - 1].ownedBy.values()
+            game.states[state].ownedBy.values()
         ).filter(v => v === player).length
     ]).sort(([a, ap], [b, bp]) => bp - ap)
     const content = playerPoints.map(([player, points]) => (
@@ -137,6 +137,15 @@ async function start() {
     const api = await ClientApi.fromModule(Module)
     const gi = await api.loadGame("/cgi-bin/server/state/" + gameId)
     const game = Game.fromGameInspector(gi)
+    const stateParam = urlParams.get("state")
+    const selectedState = stateParam ? Math.max(
+        0,
+        Math.min(
+            parseInt(stateParam),
+            game.states.length - 1
+        )
+    ) : game.states.length - 1
+    console.log("Game:", gameId, "State:", selectedState)
     let camera, scene, renderer;
     let mesh;
     let controls;
@@ -146,7 +155,7 @@ async function start() {
 
     init()
     animate()
-    showPlayers(game)
+    showPlayers(game, selectedState)
 
     function init() {
 
@@ -215,7 +224,7 @@ async function start() {
         const planetMaterials = planetTextures.map(tex => (
             new THREE.MeshBasicMaterial({ map: tex })
         ))
-        const lastState = game.states[game.states.length - 1]
+        const lastState = game.states[selectedState]
         planets = game.nodes.map((node, nodeId) => {
             const planet = new THREE.Group()
             const owner = lastState.ownedBy.get(node)
