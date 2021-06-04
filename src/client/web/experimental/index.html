@@ -245,9 +245,11 @@ async function start() {
             const planet = new THREE.Group()
             const owner = lastState.ownedBy.get(node)
             const selectionMaterial = outlineMaterial.clone()
+            const planetOutlineMaterial = outlineMaterial.clone()
+            planetOutlineMaterial.color = new THREE.Color(
+                owner ? owner.color : "#FFFFFF" 
+            )
             if (owner) {
-                const planetOutlineMaterial = outlineMaterial.clone()
-                planetOutlineMaterial.color = new THREE.Color(owner.color)
                 const ownerView = new THREE.Mesh(
                     ownerGeometries[nodeId % planetSizes.length],
                     planetOutlineMaterial
@@ -268,9 +270,11 @@ async function start() {
                 selectionMaterial
             )
             selection.gameNode = node
+            const currentPlanetMaterial = planetMaterials[nodeId % planetMaterials.length].clone()
+            currentPlanetMaterial.color = planetOutlineMaterial.color
             const core = new THREE.Mesh(
                 planetGeometries[nodeId % planetSizes.length],
-                planetMaterials[nodeId % planetMaterials.length]
+                currentPlanetMaterial
             )
             planet.add(
                 selection,
