@@ -146,12 +146,31 @@ function showPlayers(game, state = 0) {
     )).join("\n")
     lb.innerHTML = content
 }
+
+async function loadConfig() {
+    const defaults = {
+        baseUrl: "/cgi-bin/server/state/",
+    }
+    try {
+        const configData = await (
+            await fetch("config.json")
+        ).json()
+        return {
+            ...defaults,
+            ...configData
+        }
+    } catch (e) {
+        return defaults
+    }
+}
+
 async function start() {
     const queryString = window.location.search
     const urlParams = new URLSearchParams(queryString)
     const gameId = urlParams.get("game")
     const api = await ClientApi.fromModule(Module)
-    const gi = await api.loadGame("/cgi-bin/server/state/" + gameId)
+    const config = await loadConfig()
+    const gi = await api.loadGame(config.baseUrl + gameId)
     const game = Game.fromGameInspector(gi)
     const stateParam = urlParams.get("state")
     const selectedState = stateParam ? Math.max(
@@ -184,7 +203,7 @@ async function start() {
         
         const textureLoader = new THREE.TextureLoader()
         const spaceTexture = textureLoader.load(
-            "https://images.unsplash.com/photo-1505506874110-6a7a69069a08?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1024&q=80"
+            "https://images.unsplash.com/photo-1505506874110-6a7a69069a08?fit=crop&w=1024&q=80"
         );
         spaceTexture.wrapS = THREE.RepeatWrapping;
         spaceTexture.wrapT = THREE.RepeatWrapping;
@@ -199,17 +218,17 @@ async function start() {
         scene.add( space );
 
         const planetTextures = [
-            "https://images.unsplash.com/photo-1544611910-3cb8d15aa90e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1579706624295-3c81eaef2533?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1581553804801-e46ad9c6a60f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1618260589896-e6f55a14e730?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1547556987-f3de424ebfbb?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1616649357435-aca0f077e487?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1553949345-eb786bb3f7ba?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1607594682446-2c4d5fc5644e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1617058074336-221c74dbb7c1?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1501166222995-ff31c7e93cef?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1523447704114-37cea08ee064?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1544611910-3cb8d15aa90e?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1579706624295-3c81eaef2533?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1581553804801-e46ad9c6a60f?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1618260589896-e6f55a14e730?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1547556987-f3de424ebfbb?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1616649357435-aca0f077e487?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1553949345-eb786bb3f7ba?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1607594682446-2c4d5fc5644e?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1617058074336-221c74dbb7c1?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1501166222995-ff31c7e93cef?fit=crop&w=512&q=80",
+            "https://images.unsplash.com/photo-1523447704114-37cea08ee064?fit=crop&w=512&q=80",
         ].map(url => textureLoader.load(url))
         const outlineMaterial = new THREE.MeshBasicMaterial({side: THREE.BackSide})
         outlineMaterial.color = new THREE.Color("#000000")
@@ -292,7 +311,7 @@ async function start() {
         
         connectionTextures = connectionTextureSpeeds.map(s => {
             const tex = textureLoader.load(
-                "https://images.unsplash.com/photo-1612107660524-c163953f7e07?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=512&q=80"
+                "https://images.unsplash.com/photo-1612107660524-c163953f7e07?fit=crop&w=512&q=80"
             )
             tex.wrapS = THREE.RepeatWrapping
             tex.wrapT = THREE.RepeatWrapping
