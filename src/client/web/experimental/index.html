@@ -150,6 +150,23 @@ function showPlayers(game, state = 0) {
 async function loadConfig() {
     const defaults = {
         baseUrl: "/cgi-bin/server/state/",
+        textures: {
+            planets: [
+                "https://images.unsplash.com/photo-1544611910-3cb8d15aa90e?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1579706624295-3c81eaef2533?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1581553804801-e46ad9c6a60f?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1618260589896-e6f55a14e730?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1547556987-f3de424ebfbb?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1616649357435-aca0f077e487?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1553949345-eb786bb3f7ba?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1607594682446-2c4d5fc5644e?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1617058074336-221c74dbb7c1?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1501166222995-ff31c7e93cef?fit=crop&w=512&q=80",
+                "https://images.unsplash.com/photo-1523447704114-37cea08ee064?fit=crop&w=512&q=80",
+            ],
+            space: "https://images.unsplash.com/photo-1505506874110-6a7a69069a08?fit=crop&w=1024&q=80",
+            connection: "https://images.unsplash.com/photo-1612107660524-c163953f7e07?fit=crop&w=512&q=80"
+        }
     }
     try {
         const configData = await (
@@ -157,7 +174,11 @@ async function loadConfig() {
         ).json()
         return {
             ...defaults,
-            ...configData
+            ...configData,
+            textures: {
+                ...defaults.textures,
+                ...(configData.textures || {})
+            }
         }
     } catch (e) {
         return defaults
@@ -203,7 +224,7 @@ async function start() {
         
         const textureLoader = new THREE.TextureLoader()
         const spaceTexture = textureLoader.load(
-            "https://images.unsplash.com/photo-1505506874110-6a7a69069a08?fit=crop&w=1024&q=80"
+            config.textures.space
         );
         spaceTexture.wrapS = THREE.RepeatWrapping;
         spaceTexture.wrapT = THREE.RepeatWrapping;
@@ -217,19 +238,7 @@ async function start() {
         space.position.set(...center)
         scene.add( space );
 
-        const planetTextures = [
-            "https://images.unsplash.com/photo-1544611910-3cb8d15aa90e?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1579706624295-3c81eaef2533?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1581553804801-e46ad9c6a60f?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1618260589896-e6f55a14e730?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1547556987-f3de424ebfbb?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1616649357435-aca0f077e487?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1553949345-eb786bb3f7ba?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1607594682446-2c4d5fc5644e?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1617058074336-221c74dbb7c1?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1501166222995-ff31c7e93cef?fit=crop&w=512&q=80",
-            "https://images.unsplash.com/photo-1523447704114-37cea08ee064?fit=crop&w=512&q=80",
-        ].map(url => textureLoader.load(url))
+        const planetTextures = config.textures.planets.map(url => textureLoader.load(url))
         const outlineMaterial = new THREE.MeshBasicMaterial({side: THREE.BackSide})
         outlineMaterial.color = new THREE.Color("#000000")
         for (const pt of planetTextures) {
@@ -311,7 +320,7 @@ async function start() {
         
         connectionTextures = connectionTextureSpeeds.map(s => {
             const tex = textureLoader.load(
-                "https://images.unsplash.com/photo-1612107660524-c163953f7e07?fit=crop&w=512&q=80"
+                config.textures.connection
             )
             tex.wrapS = THREE.RepeatWrapping
             tex.wrapT = THREE.RepeatWrapping
