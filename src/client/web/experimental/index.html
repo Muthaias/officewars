@@ -17,6 +17,7 @@ body {
     padding: 0;
     margin: 0;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background: #000;
 }
 
 * {
@@ -112,11 +113,52 @@ body {
     background-color: rgba(255, 255, 255, 0.6);
     float: left;
 }
+#game-list {
+    display: none;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    padding: 20px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.6);
+    width: 300px;
+}
+#game-list > h2 {
+    margin: 0;
+    padding: 0;
+    margin-bottom: 10px;
+}
+#game-list > .entry > .game-name {
+    padding: 10px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+
+    transition: background-color 0.2s, color 0.2s;
+
+    color: #000;
+    background-color: rgba(255, 255, 255, 0.6);
+    
+    margin-bottom: 5px;
+}
+#game-list > .entry:last-child > .game-name{
+    margin-bottom: 0;
+}
+#game-list > .entry > .game-name:hover {
+    padding: 10px;
+    display: block;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.6);
+}
 </style>
     </head>
     <body>
         <div id="app">
             <div id="leader-board">
+            </div>
+            <div id="game-list">
             </div>
         </div>
     </body>
@@ -125,6 +167,7 @@ function playMusic() {
     const music = document.getElementById("bg-music")
     music.play()
 }
+
 function showPlayers(game, state = 0) {
     const lb = document.getElementById("leader-board")
     const playerPoints = game.players.map(player => [
@@ -145,6 +188,24 @@ function showPlayers(game, state = 0) {
 `
     )).join("\n")
     lb.innerHTML = content
+}
+
+function showGameList(games) {
+    const gl = document.getElementById("game-list")
+    const content = games.map((game) => (
+        `
+<div class="entry">
+    <a class="game-name" href="?game=${game.id}">
+        ${game.name}
+    </a>
+</div>
+`
+    )).join("\n")
+    gl.style.display = "block"
+    gl.innerHTML = `
+<h2>Game list</h2>
+${content}
+`
 }
 
 async function loadConfig() {
@@ -185,13 +246,88 @@ async function loadConfig() {
     }
 }
 
-async function start() {
-    const queryString = window.location.search
-    const urlParams = new URLSearchParams(queryString)
-    const gameId = urlParams.get("game")
+function initBase(config, center) {
+    const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 )
+    const scene = new THREE.Scene()
+    
+    const textureLoader = new THREE.TextureLoader()
+    const spaceTexture = textureLoader.load(
+        config.textures.space
+    );
+    spaceTexture.wrapS = THREE.RepeatWrapping;
+    spaceTexture.wrapT = THREE.RepeatWrapping;
+    spaceTexture.repeat.set(2, 1)
+    const spaceMaterial = new THREE.MeshBasicMaterial({
+        map: spaceTexture,
+        side: THREE.BackSide
+    })
+    const spaceGeometry = new THREE.SphereGeometry(
+        800, 20, 10
+    );
+    const space = new THREE.Mesh(
+        spaceGeometry,
+        spaceMaterial
+    );
+    space.position.set(...center)
+    scene.add(space)
+    return {
+        scene,
+        camera,
+        textureLoader
+    }
+}
+
+function initRenderer() {
+    const renderer = new THREE.WebGLRenderer( { antialias: true } )
+    renderer.setPixelRatio( window.devicePixelRatio )
+    renderer.setSize( window.innerWidth, window.innerHeight )
+    document.body.appendChild( renderer.domElement )
+    return renderer
+}
+
+function initControls(renderer, camera, center) {
+    const controls = new THREE.OrbitControls( camera, renderer.domElement )
+    camera.position.set(0, 0, 10);
+    console.log(center)
+    controls.target.set(...center)
+    controls.update();
+    return controls;
+}
+
+async function showGames() {
     const api = await ClientApi.fromModule(Module)
     const config = await loadConfig()
-    const gi = await api.loadGame(config.baseUrl + gameId)
+    const gameList = await api.loadGameList(config.baseUrl + "/games")
+    const games = Array.from(
+        {length: gameList.gameCount()}
+    ).map((_, index) => (
+        {
+            index: index,
+            ...gameList.getGame(index)
+        }
+    ))
+    console.log("games", games)
+    showGameList(games)
+    const center = [0, 0, 0]
+    const {
+        scene,
+        camera,
+    } = initBase(config, center)
+    const renderer = initRenderer()
+    const controls = initControls(renderer, camera, center)
+
+    function animate() {
+        requestAnimationFrame(animate)
+        renderer.render(scene, camera)
+        controls.update()
+    }
+    animate()
+}
+
+async function start(gameId) {
+    const api = await ClientApi.fromModule(Module)
+    const config = await loadConfig()
+    const gi = await api.loadGame(config.baseUrl + "/state/" + gameId)
     const game = Game.fromGameInspector(gi)
     const stateParam = urlParams.get("state")
     const selectedState = stateParam ? Math.max(
@@ -214,29 +350,13 @@ async function start() {
     showPlayers(game, selectedState)
 
     function init() {
-
-        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 )
-        scene = new THREE.Scene()
-
         const center = game.nodes.map(n => n.position).reduce(
             (acc, p) => acc.map((v, i) => v + p[i])
         ).map(v => v / game.nodes.length)
-        
-        const textureLoader = new THREE.TextureLoader()
-        const spaceTexture = textureLoader.load(
-            config.textures.space
-        );
-        spaceTexture.wrapS = THREE.RepeatWrapping;
-        spaceTexture.wrapT = THREE.RepeatWrapping;
-        spaceTexture.repeat.set(2, 1)
-        const spaceMaterial = new THREE.MeshBasicMaterial( { map: spaceTexture, side: THREE.BackSide } )
-        const spaceGeometry = new THREE.SphereGeometry( 800, 20, 10 );
-        const space = new THREE.Mesh(
-            spaceGeometry,
-            spaceMaterial
-        );
-        space.position.set(...center)
-        scene.add( space );
+        const base = initBase(config, center)
+        camera = base.camera
+        scene = base.scene
+        textureLoader = base.textureLoader
 
         const planetTextures = config.textures.planets.map(url => textureLoader.load(url))
         const outlineMaterial = new THREE.MeshBasicMaterial({side: THREE.BackSide})
@@ -365,20 +485,13 @@ async function start() {
             }
         }
 
-        renderer = new THREE.WebGLRenderer( { antialias: true } )
-        renderer.setPixelRatio( window.devicePixelRatio )
-        renderer.setSize( window.innerWidth, window.innerHeight )
+        renderer = initRenderer()
         raycaster = new THREE.Raycaster();
         renderer.domElement.addEventListener( 'click', raycastFunc(selectHandler), false )
-        document.body.appendChild( renderer.domElement )
 
-        controls = new THREE.OrbitControls( camera, renderer.domElement )
-        camera.position.set(0, 0, 10);
-        console.log(center)
-        controls.target.set(...center)
-        controls.update();
+        controls = initControls(renderer, camera, center)
 
-        window.addEventListener( 'resize', onWindowResize );
+        window.addEventListener( 'resize', onWindowResize )
 
     }
 
@@ -451,6 +564,15 @@ async function start() {
 
     }
 }
-start()
+
+const queryString = window.location.search
+const urlParams = new URLSearchParams(queryString)
+const gameId = urlParams.get("game")
+if (gameId) {
+    start(gameId)
+} else {
+    showGames()
+}
+
     </script>
 </html>

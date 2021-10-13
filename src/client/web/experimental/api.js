@@ -15,14 +15,18 @@ class ClientApi {
         const data = await (await fetch(path)).text()
         const api = this._rawApi
         const gameList = api.loadGameList(data, data.length)
-        const listFuncs = {
-            gameCount: api.getGameCount,
-            game: this._wrapGame,
+        return {
+            gameCount: () => {
+                return api.getGameCount(gameList)
+            },
+            getGame: (gameIndex) => {
+                const game = api.getGame(gameList, gameIndex)
+                return {
+                    name: api.getGameName(game),
+                    id: api.getGameId(game),
+                }
+            },
         }
-        return Object.keys(listFuncs).reduce((acc, key) => {
-            acc[key] = listFuncs[key].bind(acc, gameList)
-            return acc
-        }, {})
     }
 
     _wrapGame(game) {
