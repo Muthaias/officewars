@@ -324,13 +324,12 @@ async function showGames() {
     animate()
 }
 
-async function start(gameId) {
+async function start(gameId, stateParam) {
     const api = await ClientApi.fromModule(Module)
     const config = await loadConfig()
     const gi = await api.loadGame(config.baseUrl + "/state/" + gameId)
     const game = Game.fromGameInspector(gi)
-    const stateParam = urlParams.get("state")
-    const selectedState = stateParam ? Math.max(
+    const selectedState = stateParam !== null ? Math.max(
         0,
         Math.min(
             parseInt(stateParam),
@@ -569,7 +568,8 @@ const queryString = window.location.search
 const urlParams = new URLSearchParams(queryString)
 const gameId = urlParams.get("game")
 if (gameId) {
-    start(gameId)
+    const stateParam = urlParams.get("state")
+    start(gameId, stateParam)
 } else {
     showGames()
 }
